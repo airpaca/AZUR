@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr_FR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Carte AZUR, visualisation de la pollution de l'air à haute résolution">
+    <meta name="author" content="AtmoSud">
+    <!-- CSS Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- Plugin Leaflet Fullscreen -->
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
+        rel='stylesheet' />
+    <!-- style css -->
+    <link rel="stylesheet" href="azur-jour-v2.css">
+    <title>AZUR | Prévision urbaines régionales</title>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+        <a class="navbar-brand" href="#">Azur</a>
+        <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+    
+        <div class="navbar-collapse collapse border-left" id="navbarColor01">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item ml-2">
+                <a class="nav-link d-flex align-items-center" href="https://apigeoloc.atmosud.org/">
+                    <svg class="mr-1" width="18" height="18" viewBox="0 0 522.468 522.469" style="enable-background:new 0 0 522.468 522.469;">                     
+                        <g>
+                            <path style="fill: rgba(0,0,0,.5)" d="M325.762,70.513l-17.706-4.854c-2.279-0.76-4.524-0.521-6.707,0.715c-2.19,1.237-3.669,3.094-4.429,5.568L190.426,440.53    c-0.76,2.475-0.522,4.809,0.715,6.995c1.237,2.19,3.09,3.665,5.568,4.425l17.701,4.856c2.284,0.766,4.521,0.526,6.71-0.712    c2.19-1.243,3.666-3.094,4.425-5.564L332.042,81.936c0.759-2.474,0.523-4.808-0.716-6.999    C330.088,72.747,328.237,71.272,325.762,70.513z"/>
+                            <path style="fill: rgba(0,0,0,.5)" d="M166.167,142.465c0-2.474-0.953-4.665-2.856-6.567l-14.277-14.276c-1.903-1.903-4.093-2.857-6.567-2.857    s-4.665,0.955-6.567,2.857L2.856,254.666C0.95,256.569,0,258.759,0,261.233c0,2.474,0.953,4.664,2.856,6.566l133.043,133.044    c1.902,1.906,4.089,2.854,6.567,2.854s4.665-0.951,6.567-2.854l14.277-14.268c1.903-1.902,2.856-4.093,2.856-6.57    c0-2.471-0.953-4.661-2.856-6.563L51.107,261.233l112.204-112.201C165.217,147.13,166.167,144.939,166.167,142.465z"/>
+                            <path style="fill: rgba(0,0,0,.5)" d="M519.614,254.663L386.567,121.619c-1.902-1.902-4.093-2.857-6.563-2.857c-2.478,0-4.661,0.955-6.57,2.857l-14.271,14.275    c-1.902,1.903-2.851,4.09-2.851,6.567s0.948,4.665,2.851,6.567l112.206,112.204L359.163,373.442    c-1.902,1.902-2.851,4.093-2.851,6.563c0,2.478,0.948,4.668,2.851,6.57l14.271,14.268c1.909,1.906,4.093,2.854,6.57,2.854    c2.471,0,4.661-0.951,6.563-2.854L519.614,267.8c1.903-1.902,2.854-4.096,2.854-6.57    C522.468,258.755,521.517,256.565,519.614,254.663z"/>
+                        </g>
+                    </svg>
+                    API
+                </a>
+            </li>
+          </ul>
+          <form class="form-inline">
+            <input id="search__input" class="form-control mr-sm-2" type="search" placeholder="Rechercher" aria-label="Search" autocomplete="off">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none">
+                    <path d="M23.928 22.275l-7.791-7.791A8.919 8.919 0 0 0 18 9a8.946 8.946 0 0 0-2.637-6.363A8.933 
+                    8.933 0 0 0 9 0a8.946 8.946 0 0 0-6.363 2.637A8.928 8.928 0 0 0 0 9c0 2.403.939 4.665 2.637 
+                    6.363A8.928 8.928 0 0 0 9 18c2.01 0 3.918-.654 5.48-1.86l7.792 7.788a.246.246 0 0 0 .348 
+                    0l1.308-1.305a.246.246 0 0 0 0-.348zm-10.176-8.523A6.684 6.684 0 0 1 9 15.72a6.684 6.684
+                    0 0 1-4.752-1.968A6.684 6.684 0 0 1 2.28 9c0-1.794.699-3.483 1.968-4.752A6.684 6.684 0 0 1 9
+                    2.28c1.794 0 3.483.696 4.752 1.968A6.684 6.684 0 0 1 15.72 9a6.678 6.678 0 0 1-1.968 4.752z"
+                        fill="rgba(40, 167, 69, 0.976)" />
+                </svg>
+            </button>
+          </form>
+        </div>
+    </nav>
+
+    <!-- container résultats recherche -->
+    <div id="search__results" class="hidden"></div>
+
+    <main>
+        <!-- carte Leaflet -->
+        <div id="map"></div>
+
+        <!-- zone de séléction des polluants/échéances -->
+        <div id="select__zone">
+            <div class="d-flex w-100">
+                <div id="container-select-polluant-wms" class="form-group mb-0 mr-2">
+                    <select id="select-polluant-wms" class="form-control">
+                        <option mapvalue="ISA" value="multi" selected>Multi Polluant</option>
+                        <option mapvalue="NO2" value="no2">NO2</option>
+                        <option mapvalue="O3" value="o3">O3</option>
+                        <option mapvalue="PM10" value="pm10">PM10</option>
+                        <option mapvalue="PM25" value="pm2_5">PM25</option>
+                    </select>
+                </div>
+
+                <div id="container-select-echeance-wms" class="form-group mb-0">
+                    <!-- ici une zone de selection est générée par JavaScript en fonction
+                de la disponibilité des flux sur le géoserveur -->
+                </div>
+            </div>
+        </div>
+
+        <!-- image légende polluant -->
+        <div id="legend__container">
+            <img id="legend__image" src="./images/legend_multi.png" alt="legend">
+        </div>
+
+        <!-- écran de chargement -->
+        <div id="loading__container">
+            <div class="spinner-border text-success mb-4" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <h5 style="color: #7d7d7d">Chargement en cours...</h5>
+        </div>
+
+    </main>
+
+    <!-- modal graphs -->
+    <button id="modal__btn" type="button" class="btn btn-primary hidden" data-toggle="modal" data-target="#exampleModal"></button>
+
+    <div class="modal" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog shadow-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title w-100" id="exampleModalLabel" style="text-align: center;">Aperçu des polluants</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+                <canvas class="chartjs-render-monitor" id="canvas__modal" width="600" height="600"></canvas>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-warning" data-dismiss="modal">Fermer</button>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <a href="https://www.atmosud.org" class="logo__container">
+        <img src="./images/atmosud.png" alt="Logo AtmoSud" width="100%">
+    </a>
+
+    <!-- Moment.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+    <!-- Leaflet Plugin Fullscreen -->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <!-- JQuery used by Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <!-- popper.js used By Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <!-- Bootstrap -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+    <script src="index.js"></script>
+</body>
+
+</html>
