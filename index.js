@@ -53,57 +53,39 @@ function createMap() {
 
     map.setView([43.7284, 5.9367], iniZoom);
 
-    if(moment().format('HH') > 10) {
-        document.getElementById('container-select-echeance-wms').innerHTML = `
-        <select id="select-echeance-wms" class="form-control">
-            <option mapvalue="jm1" value="0" ech="1">J-1</option>
-            <option mapvalue="jp0" value="1" ech="2" selected>J-0</option>
-            <option mapvalue="jp1" value="2" ech="3">J+1</option>
-            <option mapvalue="jp2" value="3" ech="4">J+2</option>
-        </select>`;
-    } else {
-        document.getElementById('container-select-echeance-wms').innerHTML = `
-        <select id="select-echeance-wms" class="form-control">
-            <option mapvalue="jp0" value="1" ech="1">J-1</option>
-            <option mapvalue="jp1" value="2" ech="2" selected>J-0</option>
-            <option mapvalue="jp2" value="3" ech="3">J+1</option>
-        </select>`;
-    }
-
-    addWmsMap('multi', 1);
+    addWmsMap('multi');
 }
 
 /**
  * Cette fonction permet de générer la chaîne de caractères correspondante au layer choisit par l'utilisateur
- * WMTS / TMS
  * @param {string} polluant 
  * @param {integer} echeance 
  * @return {json} 
  */
-function getWmsLayer(polluant, echeance) {
-
-    let wmsAdress = 'https://geoservices.atmosud.org/geoserver/azurjour/wms?';
-
-    let layer = `paca-${polluant}-${moment().format('YYYY-MM-DD')}`;
-
-    return {
-        "layer": layer,
-        "wmsAdress": wmsAdress
-    }
-}
-
-function getWmsLayerMap() {
-
-    wmsAdress = "/cgi-bin/mapserv?map=/home/airpaca/airesv5/script/module/www.azur/previurb-j.map";
+function getWmsLayer(polluant) {
+    let layer;
+    let wmsAdress;
 
     let selectPol = document.getElementById('select-polluant-wms');
-    let optionPol = selectPol.options[selectPol.selectedIndex].getAttribute('mapvalue');
-
     let selectEch = document.getElementById('select-echeance-wms');
-    let optionEch = selectEch.options[selectEch.selectedIndex].getAttribute('mapvalue');  
 
-    let layer = `PACA_${optionPol}_${optionEch}`;
+    if(document.querySelector('.input__radio__server').checked) {
+        wmsAdress = 'https://geoservices.atmosud.org/geoserver/azurjour/wms?';
+
+        let ech = selectEch.options[selectEch.selectedIndex].getAttribute('ech');
+
+        layer = `paca-${polluant}-${moment().add(ech, 'days').format('YYYY-MM-DD')}`;
+
+    } else {
+        wmsAdress = "/cgi-bin/mapserv?map=/home/airpaca/airesv5/script/module/www.azur/previurb-j.map";
        
+        let optionPol = selectPol.options[selectPol.selectedIndex].getAttribute('mapvalue');
+
+        let optionEch = selectEch.options[selectEch.selectedIndex].getAttribute('mapvalue');  
+    
+        layer = `PACA_${optionPol}_${optionEch}`;
+    }
+
     return {
         "layer": layer,
         "wmsAdress": wmsAdress
@@ -116,23 +98,12 @@ function getWmsLayerMap() {
  * @param {srting} polluant 
  * @param {integer} echeance 
  */
-function addWmsMap(polluant, echeance) {
-    // !! Enlever flyTO fonction apigeoloc quand zoom
-    // prepmap généré a 10h30. si erreur -> géoserveur 
-    // afficher menu button en desktop et liste déroulante en mobile.
-    // charger python en premier avant 12h
-    // a partir de midi -> géoserveur 
+function addWmsMap(polluant) {
+
     let flag = 0;
-    let getHours = moment().format('HH');
-    let data;
-
-    if(getHours > 10) {
-         data = getWmsLayer(polluant, echeance);
-    } else {
-         data = getWmsLayerMap();
-    } 
+ 
+    let data = getWmsLayer(polluant);
         
-
     wmsLayer = Leaflet.tileLayer.wms(data.wmsAdress, {
         layers: data.layer,
         format: 'image/png',
@@ -144,7 +115,7 @@ function addWmsMap(polluant, echeance) {
 
         if(flag == 1) return;
         
-        alert('Problème de lors de \'insertion de la carte de pollution. Veuillez réesayer');
+        alert('Problème de lors de l\'insertion de la carte de pollution. Veuillez réesayer');
 
         flag = 1;
     })
@@ -158,30 +129,37 @@ function addWmsMap(polluant, echeance) {
  */
 function refreshWmsLayer() {
     document.querySelector('#select-polluant-wms').addEventListener('change', (event) => {   
-        let data = getWmsLayer(event.target.value, document.querySelector('#select-echeance-wms').value);
+        let data = getWmsLayer(event.target.value);
         wmsLayer.setParams({ layers: data.layer });
         document.getElementById('legend__image').src = `./images/legend_${event.target.value}.png`;
         
-        let polluant = document.getElementById('select-polluant-wms');
-        let polluantValue = polluant.options[polluant.selectedIndex].textContent;
+        // let polluant = document.getElementById('select-polluant-wms');
+        // let polluantValue = polluant.options[polluant.selectedIndex].textContent;
 
-        let select = document.getElementById('select-echeance-wms');
-        let ech = select.options[select.selectedIndex].getAttribute('ech');
+        // let select = document.getElementById('select-echeance-wms');
+        // let ech = select.options[select.selectedIndex].getAttribute('ech');
 
-        getStationsGeoJSon(polluantValue, ech);
+        // getStationsGeoJSon(polluantValue, ech);
     })
 
     document.querySelector('#select-echeance-wms').addEventListener('change', (event) => {   
-        let data = getWmsLayer(document.querySelector('#select-polluant-wms').value, event.target.value);
+        let data = getWmsLayer(document.querySelector('#select-polluant-wms').value);
         wmsLayer.setParams({ layers: data.layer });
 
-        let polluant = document.getElementById('select-polluant-wms');
-        let polluantValue = polluant.options[polluant.selectedIndex].textContent;
+        // let polluant = document.getElementById('select-polluant-wms');
+        // let polluantValue = polluant.options[polluant.selectedIndex].textContent;
 
-        let select = document.getElementById('select-echeance-wms');
-        let ech = select.options[select.selectedIndex].getAttribute('ech');
+        // let select = document.getElementById('select-echeance-wms');
+        // let ech = select.options[select.selectedIndex].getAttribute('ech');
 
-        getStationsGeoJSon(polluantValue, ech);
+        // getStationsGeoJSon(polluantValue, ech);
+    })
+
+    document.querySelectorAll('.input__radio__server').forEach(elm => {
+        elm.addEventListener('change', () => {   
+            let data = getWmsLayer(document.querySelector('#select-polluant-wms').value);
+            wmsLayer.setParams({ layers: data.layer });
+        })
     })
 }
 
@@ -466,8 +444,6 @@ async function getStationsGeoJSon(polluant, echeance) {
         },
     
         onEachFeature: (feature, layer) => {
-
-            console.log(values)
 
             layer.bindPopup(`<div>
                 <p class="popup_content w100" style="text-align:center">${values[0]} : ${values[1]}</p>

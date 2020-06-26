@@ -68,6 +68,19 @@
 
         <!-- zone de séléction des polluants/échéances -->
         <div id="select__zone">
+            
+            <div class="w-100 d-flex justify-content-center align-items-center">
+                <div class="w-50 d-flex justify-content-center align-items-baseline">
+                    <input class="input__radio__server mr-2" type="radio" name="serverchoice" value="geoserveur" checked>
+                    <label for="geoserveur">GeoServeur</label>
+                </div>
+                  
+                <div class="w-50 d-flex justify-content-center align-items-baseline">
+                    <input class="input__radio__server mr-2" type="radio" name="serverchoice" value="mapserveur">
+                    <label for="mapserveur">MapServer</label>
+                </div>
+            </div>
+
             <div class="d-flex w-100">
                 <div id="container-select-polluant-wms" class="form-group mb-0 mr-2">
                     <select id="select-polluant-wms" class="form-control">
@@ -80,8 +93,12 @@
                 </div>
 
                 <div id="container-select-echeance-wms" class="form-group mb-0">
-                    <!-- ici une zone de selection est générée par JavaScript en fonction
-                de la disponibilité des flux sur le géoserveur -->
+                    <select id="select-echeance-wms" class="form-control">
+                        <option mapvalue="jm1" value="0" ech="-1">J-1</option>
+                        <option mapvalue="jp0" value="1" ech="0" selected>J-0</option>
+                        <option mapvalue="jp1" value="2" ech="1">J+1</option>
+                        <option mapvalue="jp2" value="3" ech="2">J+2</option>
+                    </select>
                 </div>
             </div>
         </div>
