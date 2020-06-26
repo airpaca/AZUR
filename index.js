@@ -69,6 +69,8 @@ function getWmsLayer(polluant) {
     let selectPol = document.getElementById('select-polluant-wms');
     let selectEch = document.getElementById('select-echeance-wms');
 
+    console.log(document.querySelector('.input__radio__server').checked)
+
     if(document.querySelector('.input__radio__server').checked) {
         wmsAdress = 'https://geoservices.atmosud.org/geoserver/azurjour/wms?';
 
@@ -85,6 +87,8 @@ function getWmsLayer(polluant) {
     
         layer = `PACA_${optionPol}_${optionEch}`;
     }
+
+    console.log(wmsAdress)
 
     return {
         "layer": layer,
@@ -103,6 +107,8 @@ function addWmsMap(polluant) {
     let flag = 0;
  
     let data = getWmsLayer(polluant);
+
+    console.log(data.wmsAdress)
         
     wmsLayer = Leaflet.tileLayer.wms(data.wmsAdress, {
         layers: data.layer,
