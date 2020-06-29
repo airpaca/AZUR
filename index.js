@@ -69,14 +69,14 @@ function getWmsLayer(polluant) {
     let selectEch = document.getElementById('select-echeance-wms');
 
 
-    if(document.querySelector('.input__radio__server').checked) {
-        wmsAdress = 'https://geoservices.atmosud.org/geoserver/azurjour/wms?';
+    // if(document.querySelector('.input__radio__server').checked) {
+    //     wmsAdress = 'https://geoservices.atmosud.org/geoserver/azurjour/wms?';
 
-        let ech = selectEch.options[selectEch.selectedIndex].getAttribute('ech');
+    //     let ech = selectEch.options[selectEch.selectedIndex].getAttribute('ech');
 
-        layer = `paca-${polluant}-${moment().add(ech, 'days').format('YYYY-MM-DD')}`;
+    //     layer = `paca-${polluant}-${moment().add(ech, 'days').format('YYYY-MM-DD')}`;
 
-    } else {
+    // } else {
         wmsAdress = "/cgi-bin/mapserv?map=/home/airpaca/airesv5/script/module/www.azur/previurb-j.map";
        
         let optionPol = selectPol.options[selectPol.selectedIndex].getAttribute('mapvalue');
@@ -84,7 +84,7 @@ function getWmsLayer(polluant) {
         let optionEch = selectEch.options[selectEch.selectedIndex].getAttribute('mapvalue');  
     
         layer = `PACA_${optionPol}_${optionEch}`;
-    }
+    // }
 
     return {
         "layer": layer,
