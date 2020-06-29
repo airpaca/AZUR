@@ -10,7 +10,6 @@ let map;
 let wmsLayer; 
 let markersLayer;
 let chart;
-const Leaflet = L;
 
 // Appel des fonctions
 loadingScreen();
@@ -25,13 +24,13 @@ function createMap() {
 
     let iniZoom = 9;
 
-    let mapLayer = Leaflet.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+    let mapLayer = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
         attribution: '&copy;<a href="http://www.airpaca.org/"> ATMOSUD - 2020 </a>| © <a href="https://www.mapbox.com/">Mapbox</a>',
         id: 'mapbox/streets-v11',
         accessToken: 'pk.eyJ1IjoiZHVkeTgzIiwiYSI6ImNrNW1pbTA1djA4MHIzZGw1NTBjZHh5dW8ifQ.jJ8WpKmBG9WSoc5hWGALag'
     });
 
-    map = Leaflet.map('map', {
+    map = L.map('map', {
         layers: [mapLayer],
         fullscreenControl: true,
     });
@@ -69,7 +68,6 @@ function getWmsLayer(polluant) {
     let selectPol = document.getElementById('select-polluant-wms');
     let selectEch = document.getElementById('select-echeance-wms');
 
-    console.log(document.querySelector('.input__radio__server').checked)
 
     if(document.querySelector('.input__radio__server').checked) {
         wmsAdress = 'https://geoservices.atmosud.org/geoserver/azurjour/wms?';
@@ -87,8 +85,6 @@ function getWmsLayer(polluant) {
     
         layer = `PACA_${optionPol}_${optionEch}`;
     }
-
-    console.log(wmsAdress)
 
     return {
         "layer": layer,
@@ -108,9 +104,9 @@ function addWmsMap(polluant) {
  
     let data = getWmsLayer(polluant);
 
-    console.log(data.wmsAdress)
-        
-    wmsLayer = Leaflet.tileLayer.wms(data.wmsAdress, {
+    if(wmsLayer) map.removeLayer(wmsLayer)
+
+    wmsLayer = L.tileLayer.wms(data.wmsAdress, {
         layers: data.layer,
         format: 'image/png',
         transparent: true,
@@ -135,36 +131,17 @@ function addWmsMap(polluant) {
  */
 function refreshWmsLayer() {
     document.querySelector('#select-polluant-wms').addEventListener('change', (event) => {   
-        let data = getWmsLayer(event.target.value);
-        wmsLayer.setParams({ layers: data.layer });
+        addWmsMap(event.target.value);
         document.getElementById('legend__image').src = `./images/legend_${event.target.value}.png`;
-        
-        // let polluant = document.getElementById('select-polluant-wms');
-        // let polluantValue = polluant.options[polluant.selectedIndex].textContent;
-
-        // let select = document.getElementById('select-echeance-wms');
-        // let ech = select.options[select.selectedIndex].getAttribute('ech');
-
-        // getStationsGeoJSon(polluantValue, ech);
     })
 
-    document.querySelector('#select-echeance-wms').addEventListener('change', (event) => {   
-        let data = getWmsLayer(document.querySelector('#select-polluant-wms').value);
-        wmsLayer.setParams({ layers: data.layer });
-
-        // let polluant = document.getElementById('select-polluant-wms');
-        // let polluantValue = polluant.options[polluant.selectedIndex].textContent;
-
-        // let select = document.getElementById('select-echeance-wms');
-        // let ech = select.options[select.selectedIndex].getAttribute('ech');
-
-        // getStationsGeoJSon(polluantValue, ech);
+    document.querySelector('#select-echeance-wms').addEventListener('change', () => {  
+        addWmsMap(document.querySelector('#select-polluant-wms').value);
     })
 
     document.querySelectorAll('.input__radio__server').forEach(elm => {
         elm.addEventListener('change', () => {   
-            let data = getWmsLayer(document.querySelector('#select-polluant-wms').value);
-            wmsLayer.setParams({ layers: data.layer });
+            addWmsMap(document.querySelector('#select-polluant-wms').value);
         })
     })
 }
