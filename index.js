@@ -16,6 +16,10 @@ loadingScreen();
 createMap();
 refreshWmsLayer();
 document.getElementById('search__input').addEventListener('keyup', searchCityFromGeoApiGouv);
+
+document.getElementById('search__area').addEventListener('submit', (event) => {
+    event.preventDefault();
+});
 /*
  * Cette fonction créé la Map Leaflet et appelle la @function addWmsMap()
  * pour ajouter la carte de concentration lors du chargement de la page
@@ -64,29 +68,49 @@ function createMap() {
 function getWmsLayer(polluant) {
     let layer;
     let wmsAdress;
+    let server;
+    let zone = document.querySelector('.input__radio__area').checked;
+    let serverOn = document.querySelector('.input__radio__server').checked;
 
     let selectPol = document.getElementById('select-polluant-wms');
     let selectEch = document.getElementById('select-echeance-wms');
 
+    let optionPol = selectPol.options[selectPol.selectedIndex].getAttribute('mapvalue');
+    let optionEch = selectEch.options[selectEch.selectedIndex].getAttribute('mapvalue');  
 
-    if(document.querySelector('.input__radio__server').checked) {
-        wmsAdress = 'https://geoservices.atmosud.org/geoserver/azurjour/wms?';
+    let days = selectEch.options[selectEch.selectedIndex].getAttribute('ech');
 
-        let ech = selectEch.options[selectEch.selectedIndex].getAttribute('ech');
-
-        layer = `paca-${polluant}-${moment().add(ech, 'days').format('YYYY-MM-DD')}`;
-
-    } else {
-        wmsAdress = "/cgi-bin/mapserv?map=/home/airpaca/airesv5/script/module/www.azur/previurb-j.map";
-       
-        let optionPol = selectPol.options[selectPol.selectedIndex].getAttribute('mapvalue');
-
-        let optionEch = selectEch.options[selectEch.selectedIndex].getAttribute('mapvalue');  
+    if (serverOn) {
+        if (zone) {
+            wmsAdress = 'https://geoservices.atmosud.org/geowebcache/service/wmts?';
     
-        layer = `PACA_${optionPol}_${optionEch}`;
+            layer = `paca-${polluant}-${moment().add(days, 'days').format('YYYY-MM-DD')}`;
+        } else {
+            wmsAdress = 'https://geoservices.atmosud.org/geoserver/azurjourmc/wms?';
+    
+            layer = `raster_dep98_${optionPol}_${moment().add(days, 'days').format('YYYY_MM_DD')}_${optionEch}`;
+        }
+
+        server = 'geoserver';
+    } else {
+        wmsAdress = "/cgi-bin/mapserv?map=/home/airpaca/airesv5/script/module/www.azur/previurb-j.map";;
+
+        if (zone) 
+            layer = `PACA_${optionPol}_${optionEch}`;          
+        else 
+            layer = `raster_dep98_${optionPol}_${moment().add(days, 'days').format('YYYY_MM_DD')}_${optionEch}`;
+        
+        server = 'mapserver';
     }
 
+    console.log({
+        "server": server,
+        "layer": layer,
+        "wmsAdress": wmsAdress
+    });
+
     return {
+        "server": server,
         "layer": layer,
         "wmsAdress": wmsAdress
     }
@@ -104,15 +128,27 @@ function addWmsMap(polluant) {
  
     let data = getWmsLayer(polluant);
 
-    if(wmsLayer) map.removeLayer(wmsLayer)
+    if(wmsLayer) map.removeLayer(wmsLayer);
 
-    wmsLayer = L.tileLayer.wms(data.wmsAdress, {
-        layers: data.layer,
-        format: 'image/png',
-        transparent: true,
-        opacity: 0.6
-    }).addTo(map);
-
+    if(data.server == 'geoserver') {
+        wmsLayer = L.tileLayer(
+            `${data.wmsAdress}layer=azurjour%3A${data.layer}&tilematrixset=EPSG%3A900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng8&TILEMATRIX=EPSG:900913:{z}&TileCol={x}&TileRow={y}`,
+            {
+                minZoom : 0,
+                maxZoom : 18,
+                opacity: 0.6,
+                attribution : "AtmoSud"
+            }
+        ).addTo(map);
+    } else {
+        wmsLayer = L.tileLayer(data.wmsAdress, { 
+                layer: data.layer,
+                transparent: true,
+                opacity: 0.6,
+            }
+        ).addTo(map) ;
+    }
+    
     wmsLayer.on('tileerror', () => {
 
         if(flag == 1) return;
@@ -120,7 +156,7 @@ function addWmsMap(polluant) {
         alert('Problème de lors de l\'insertion de la carte de pollution. Veuillez réesayer');
 
         flag = 1;
-    })
+    });
 }
 
 
@@ -144,6 +180,12 @@ function refreshWmsLayer() {
             addWmsMap(document.querySelector('#select-polluant-wms').value);
         })
     })
+
+    document.querySelectorAll('.input__radio__area').forEach(elm => {
+        elm.addEventListener('change', () => {   
+            addWmsMap(document.querySelector('#select-polluant-wms').value);
+        })
+    })
 }
 
 /**
@@ -155,7 +197,10 @@ function refreshWmsLayer() {
  */
 async function getDataFromApiGeoloc(lon, lat) {
 
-    const URL = `https://apigeoloc.atmosud.org/getpollution?pol=ISA&lon=${lon}&lat=${lat}&ech=p0`
+    let selectPol = document.getElementById('select-polluant-wms');
+    let poll = selectPol.options[selectPol.selectedIndex].getAttribute('mapvalue');
+
+    const URL = `https://apigeoloc.atmosud.org/getpollution?pol=${poll}&lon=${lon}&lat=${lat}&ech=p0`;
 
     let response = await fetch(URL);
 
@@ -163,38 +208,64 @@ async function getDataFromApiGeoloc(lon, lat) {
 
     let value = jsonData.data.valeur;
 
+    let vLimite;
+
+    switch (poll) {
+        case 'ISA':
+            vLimite = 100;
+            break;
+
+        case 'NO2':
+            vLimite = 400;
+            break;
+
+        case 'O3':
+            vLimite = 360;
+            break;
+
+        case 'PM10':
+            vLimite = 100;
+            break;
+
+        case 'PM25':
+            vLimite = 50;
+            break;
+    }
+
     let strokeColor;
 
     let indiceAir;
 
-    if (value >= 0 && value < 20) {
+    let percentValue = value*100/vLimite;
+
+    if (percentValue >= 0 && percentValue < 20) {
         strokeColor = 'très_bon';
         indiceAir = 'Très Bon';
-    } else if (value >= 20 && value < 30) {
+    } else if (percentValue >= 20 && percentValue < 30) {
         strokeColor = 'bon1';
         indiceAir = 'Bon';
-    } else if (value >= 30 && value < 40) {
+    } else if (percentValue >= 30 && percentValue < 40) {
         strokeColor = 'bon2';
         indiceAir = 'Bon';
-    } else if (value >= 40 && value < 50) {
+    } else if (percentValue >= 40 && percentValue < 50) {
         strokeColor = 'bon3';
         indiceAir = 'Bon';
-    } else if (value >= 50 && value < 60) {
+    } else if (percentValue >= 50 && percentValue < 60) {
         strokeColor = 'moyen';
         indiceAir = 'Moyen';
-    } else if (value >= 60 && value < 70) {
+    } else if (percentValue >= 60 && percentValue < 70) {
         strokeColor = 'médiocre1';
         indiceAir = 'Médiocre';
-    } else if (value >= 70 && value < 80) {
+    } else if (percentValue >= 70 && percentValue < 80) {
         strokeColor = 'médiocre2';
         indiceAir = 'Médiocre';
-    } else if (value >= 80 && value < 90) {
+    } else if (percentValue >= 80 && percentValue < 90) {
         strokeColor = 'médiocre3';
         indiceAir = 'Médiocre';
-    } else if (value >= 90 && value < 100) {
+    } else if (percentValue >= 90 && percentValue < 100) {
         strokeColor = 'mauvais';
         indiceAir = 'Mauvais';
-    } else if (value >= 100) {
+    } else if (percentValue >= 100) {
         strokeColor = 'très_mauvais';
         indiceAir = 'Très Mauvais';
     }
@@ -206,10 +277,10 @@ async function getDataFromApiGeoloc(lon, lat) {
              <path class="circle-bg" d="M18 2.0845
                 a 15.9155 15.9155 0 0 1 0 31.831
                 a 15.9155 15.9155 0 0 1 0 -31.831" />
-             <path class="circle" stroke-dasharray="${value}, 100" d="M18 2.0845
+             <path class="circle" stroke-dasharray="${percentValue}, 100" d="M18 2.0845
                 a 15.9155 15.9155 0 0 1 0 31.831
                 a 15.9155 15.9155 0 0 1 0 -31.831" />
-             <text x="18" y="20.35" class="percentage">${value}/100</text>
+             <text x="18" y="20.35" class="percentage">${value}/${vLimite}</text>
          </svg>
      </div>
      <div id="indice_air_quality">
@@ -230,7 +301,7 @@ async function getDataFromApiGeoloc(lon, lat) {
     map.flyTo([lat, lon]);
     marker.openPopup();
 
-    drawPolluantGraph(lon, lat);
+    if(poll == 'ISA') drawPolluantGraph(lon, lat);
 }
 
 /**
@@ -356,11 +427,14 @@ async function drawPolluantGraph(lon, lat) {
  */
 async function getStationsGeoJSon(polluant, echeance) {
 
+    let selectEch = document.getElementById('select-echeance-wms');
+    let ech = selectEch.options[selectEch.selectedIndex].getAttribute('ech');
+
     let values = [];
 
     if(polluant == 'Multi Polluant' || polluant == 'O3') return;
 
-    let geoJsonPath = `/geojson/coord_STATION_dispo_PACA_${polluant}_${moment().format('DD_MM_YYYY')}`;
+    let geoJsonPath = `/geojson/coord_STATION_dispo_PACA_${polluant}_${moment().add(ech, 'days').format('DD_MM_YYYY')}`;
 
     let response = await fetch(geoJsonPath);
 

@@ -42,8 +42,8 @@
                 </a>
             </li>
           </ul>
-          <form class="form-inline">
-            <input id="search__input" class="form-control mr-sm-2" type="search" placeholder="Rechercher" aria-label="Search" autocomplete="off">
+          <form id="search__area" class="form-inline">
+            <input id="search__input" class="form-control mr-sm-2" placeholder="Rechercher" aria-label="Search" autocomplete="off">
             <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none">
                     <path d="M23.928 22.275l-7.791-7.791A8.919 8.919 0 0 0 18 9a8.946 8.946 0 0 0-2.637-6.363A8.933 
@@ -69,15 +69,27 @@
         <!-- zone de séléction des polluants/échéances -->
         <div id="select__zone">
             
-            <div class="w-100 d-flex justify-content-center align-items-center">
-                <div class="w-50 d-flex justify-content-center align-items-baseline">
+            <div class="w-100 d-flex justify-content-center align-items-center pl-2 pt-2">
+                <div class="w-50 d-flex justify-content-start align-items-baseline">
                     <input class="input__radio__server mr-2" type="radio" name="serverchoice" value="geoserveur" checked>
                     <label for="geoserveur">GeoServeur</label>
                 </div>
                   
-                <div class="w-50 d-flex justify-content-center align-items-baseline">
+                <div class="w-50 d-flex justify-content-start align-items-baseline">
                     <input class="input__radio__server mr-2" type="radio" name="serverchoice" value="mapserveur">
                     <label for="mapserveur">MapServer</label>
+                </div>
+            </div>
+
+            <div class="w-100 d-flex justify-content-center align-items-center pl-2 pt-2 border-top">
+                <div class="w-50 d-flex justify-content-start align-items-baseline">
+                    <input class="input__radio__area mr-2" type="radio" name="areachoice" value="PACA" checked>
+                    <label for="PACA">PACA</label>
+                </div>
+                  
+                <div class="w-50 d-flex justify-content-start align-items-baseline">
+                    <input class="input__radio__area mr-2" type="radio" name="areachoice" value="Monaco">
+                    <label for="Monaco">Monaco</label>
                 </div>
             </div>
 
